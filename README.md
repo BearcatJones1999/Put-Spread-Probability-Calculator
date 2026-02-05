@@ -1,10 +1,10 @@
-Put Credit Spread Downside Risk Tool
+#Put Credit Spread Downside Risk Tool
 
 This notebook evaluates downside risk for short-dated put credit spreads by combining historical breach frequencies with forward-looking, regime-adjusted risk using a GARCH(1,1) model with Student-t (fat-tailed) errors.
 
 The objective is to determine whether a given downside threshold represents true tail risk or routine market noise under current volatility conditions.
 
-What it does
+#What it does:
 
 For a selected asset and holding window (e.g. 1W, 2W, 4W):
 
@@ -20,7 +20,7 @@ Conditional probability of breaching the threshold
 
 Tail-risk uplift vs historical averages
 
-How to interpret
+#How to interpret:
 
 Empirical probability → long-run frequency of breach
 
@@ -38,7 +38,7 @@ GARCH probability is ≤ historical probability
 
 The threshold lies outside routine volatility
 
-Intended use
+#Intended use:
 
 Pre-trade risk filter for put credit spreads
 
