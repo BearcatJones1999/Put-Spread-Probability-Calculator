@@ -1,40 +1,53 @@
-# Weekly Downside Breach Analysis (Mon Open → Fri Close)
+Put Credit Spread Downside Risk Tool
 
-This repository contains a small Python analysis that estimates how often a 1-week holding window experiences a downside move large enough to breach a chosen threshold (e.g., -1.5%). The motivation is to sanity-check the empirical frequency of breakeven violations for short-duration option structures such as put credit spreads, using a simple, transparent price-based proxy.
+This notebook evaluates downside risk for short-dated put credit spreads by combining historical breach frequencies with forward-looking, regime-adjusted risk using a GARCH(1,1) model with Student-t (fat-tailed) errors.
 
-## What it measures
+The objective is to determine whether a given downside threshold represents true tail risk or routine market noise under current volatility conditions.
 
-For each week in the sample:
-- **Entry proxy:** Monday *open*
-- **Exit proxy:** Friday *close*
-- **Weekly return:** `FriClose / MonOpen - 1`
+What it does
 
-It then computes the frequency of weeks where:
+For a selected asset and holding window (e.g. 1W, 2W, 4W):
 
-- `weekly_return <= -1.5%` (configurable)
+Computes empirical downside breach rates for a user-defined return threshold
 
-This can be interpreted as the empirical probability that the underlying ends the week at least 1.5% below the entry reference point—often used as a rough proxy for “breakeven is violated” for certain spread constructions.
+Reports distribution diagnostics (mean, volatility, downside percentiles, recent breaches)
 
-## Why this approach
+Fits a GARCH(1,1) model to daily returns to estimate:
 
-Option strategies are typically defined in terms of *moneyness* (e.g., “~1.5% OTM breakeven”), not fixed strikes across time. A strike-agnostic price proxy avoids the common backtesting pitfall of applying today’s strikes to historical price levels.
+Forecast volatility over the next window
 
-## Files
+Conditional probability of breaching the threshold
 
-- `weekly_breach_analysis.py` (or notebook): main script that:
-  - downloads price data via `yfinance`
-  - builds Monday-open → Friday-close weekly periods
-  - computes weekly return distribution
-  - prints breach rates and recent breach weeks
+Tail-risk uplift vs historical averages
 
-## Requirements
+How to interpret
 
-- Python 3.9+
-- `pandas`
-- `numpy` (optional, depending on implementation)
-- `yfinance`
+Empirical probability → long-run frequency of breach
 
-Install dependencies:
+GARCH probability → likelihood of breach right now
 
-```bash
-pip install pandas yfinance numpy
+Positive uplift → hostile volatility regime (avoid selling premium)
+
+Negative uplift → favorable regime
+
+As a rule of thumb, selling downside premium is most attractive when:
+
+GARCH breach probability is low (≈5–8%)
+
+GARCH probability is ≤ historical probability
+
+The threshold lies outside routine volatility
+
+Intended use
+
+Pre-trade risk filter for put credit spreads
+
+Comparing downside risk across assets
+
+Identifying volatility regimes where premium selling is structurally unsafe
+
+This tool is risk-focused, not a pricing or PnL simulator, and assumes holding to expiration.
+
+Key takeaway
+
+Selling downside premium only works when you are being paid to insure against rare events, not normal market moves.
