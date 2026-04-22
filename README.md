@@ -1,54 +1,37 @@
-Put Credit Spread Downside Risk Tool
+# Put Spread Probability & Tail-Risk Calculator
 
-This notebook evaluates downside risk for short-dated put credit spreads by combining historical breach frequencies with forward-looking, regime-adjusted risk using a GARCH(1,1) model with Student-t (fat-tailed) errors.
+A notebook-based tool for estimating the probability that an underlying breaches a specified downside threshold over a configurable holding window — combining empirical frequency analysis with **GARCH(1,1) volatility forecasting**. Designed as a risk-gating sanity check for short-dated option strategies like put credit spreads.
 
-The goal is to determine whether a downside threshold represents true tail risk or routine market noise under current volatility conditions.
+## Motivation
 
-What it does
+Most retail probability calculators assume constant volatility and lognormal returns, which systematically underestimate tail risk during volatile regimes and overestimate it during calm ones. Equity returns exhibit **volatility clustering** — a feature directly captured by GARCH but ignored by Black-Scholes-style models.
 
-For a selected asset and holding window (e.g. 1W, 2W, 4W):
+This tool answers a practical question for option sellers:
 
-Computes historical downside breach rates for a user-defined return threshold
+> *Given current volatility conditions, how likely is it that my breakeven or short strike is breached over the next N trading days?*
 
-Reports distribution diagnostics (mean, volatility, downside percentiles, recent breaches)
+It pairs that forward-looking estimate with a historical empirical baseline, letting you see whether the current regime is pricing in more (or less) tail risk than long-run history would suggest.
 
-Fits a GARCH(1,1) model to daily returns to estimate:
+## Components
 
-Forecast volatility over the next window
+### 1. Empirical Breach Frequency
+- Pulls daily price data via `yfinance`
+- Resamples to configurable holding windows (1W, 2W, 4W, 1M, 3M)
+- Computes end-to-end returns (simple or log) over each window
+- Reports the historical frequency of returns falling below a user-defined threshold
+- Surfaces distributional statistics and the most recent breach events
 
-Conditional probability of breaching the threshold
+### 2. GARCH(1,1) Forward Forecast
+- Fits GARCH(1,1) with **Student-t innovations** to daily log returns (handles fat tails)
+- Forecasts cumulative variance over the target horizon
+- Computes the probability of breaching the threshold under the fitted conditional distribution
+- Reports a **tail-risk uplift** metric: the difference between GARCH-forecast breach probability and the empirical baseline, useful for flagging elevated-risk regimes before selling premium
 
-Tail-risk uplift relative to historical averages
+### 3. Cross-Asset Correlation
+- Downloads a user-specified basket of tickers
+- Computes return correlations across the basket at daily, weekly, or monthly frequency
+- Useful for identifying hedging candidates or diversification pairs for option positions
 
-How to interpret the output
+## Example Output
 
-Empirical probability: long-run frequency of threshold breaches
-
-GARCH probability: likelihood of breach under current volatility conditions
-
-Positive uplift: elevated risk regime (unfavorable for selling premium)
-
-Negative uplift: suppressed risk regime (favorable for selling premium)
-
-As a rule of thumb, selling downside premium is most attractive when:
-
-GARCH breach probability is low (approximately 5–8%)
-
-GARCH probability is less than or equal to the historical probability
-
-The threshold lies outside routine volatility
-
-Intended use
-
-Pre-trade risk filter for put credit spreads
-
-Comparing downside risk across assets (indices vs single names)
-
-Identifying volatility regimes where premium selling is structurally unsafe
-
-This tool is risk-focused, not a pricing or PnL simulator, and assumes holding positions to expiration.
-
-Key takeaway
-
-Selling downside premium only works when you are being paid to insure against rare events, not normal market moves.
-Selling downside premium only works when you are being paid to insure against rare events, not normal market moves.
+For AMZN with a −7.8% weekly threshold over 2010–present:
